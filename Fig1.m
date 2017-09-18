@@ -22,6 +22,7 @@ freqRanges{3} = [102 238];
 freqRanges{4} = [250 500];
 freqRangeStr = {'alpha','gamma','hi-gamma','sigma'};
 numFreqRanges = length(freqRanges);
+FigIndex = 1;
 
 for MonkeyIndex = 1: size(MonkeyNameLists,2)
     clear monkeyName;
@@ -33,12 +34,20 @@ numGoodElectrodes = length(allGoodElectrodes);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% Plot Handles %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmpi(monkeyName, 'abu')
-hDEnergyVsFreq       = getPlotHandles(1,3,[0.15 0.8 0.7 0.18],0.03,0.01);
-hBarPlot            = getPlotHandles(1,3,[0.15 0.55 0.7 0.18],0.03,0.01);
+    figure(FigIndex)
+    hEnergyVsFreq       = getPlotHandles(1,3,[0.15 0.8 0.7 0.18],0.03,0.01);
+    hBarPlot            = getPlotHandles(1,3,[0.15 0.55 0.7 0.18],0.03,0.01);
+    figure(FigIndex+1)
+    hDEnergyVsFreq      = getPlotHandles(1,3,[0.15 0.8 0.7 0.18],0.03,0.01);
+    hDiffBarPlot        = getPlotHandles(1,3,[0.15 0.55 0.7 0.18],0.03,0.01);
 
 elseif strcmpi(monkeyName, 'rafiki')
-hDEnergyVsFreq       = getPlotHandles(1,3,[0.15 0.30 0.7 0.18],0.03,0.01);
-hBarPlot            = getPlotHandles(1,3,[0.15 0.05 0.7 0.18],0.03,0.01);
+    figure(FigIndex)
+    hEnergyVsFreq       = getPlotHandles(1,3,[0.15 0.30 0.7 0.18],0.03,0.01);
+    hBarPlot            = getPlotHandles(1,3,[0.15 0.05 0.7 0.18],0.03,0.01);
+    figure(FigIndex+1)
+    hDEnergyVsFreq      = getPlotHandles(1,3,[0.15 0.30 0.7 0.18],0.03,0.01);
+    hDiffBarPlot        = getPlotHandles(1,3,[0.15 0.05 0.7 0.18],0.03,0.01);
 end
 
 % LFP Power is always computed for this period. ERP and Firing Rates are
@@ -69,22 +78,16 @@ timeRangeForSTComputation = [0.2 0.4];
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%% Plot Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%
             for cPos=6:8
+            
+            figure(FigIndex)
+            
             %%%%%%%%%%%%%%%%%%%%%%% EnergyVsFreq %%%%%%%%%%%%%%%%%%%%%%%%%%
-%             hold(hEnergyVsFreq(1,cPos),'on');
-%             plot(hEnergyVsFreq(1,cPos),energyDataBL.freqVals,squeeze(energyDataBL.data(1,cPos,:)),'color', [0.8 0.8 0.8]);
-%             plot(hEnergyVsFreq(1,cPos),energyDataBL.freqVals,squeeze(energyDataBL.data(2,cPos,:)),'color', [0.8 0.8 0.8]);
-%             
-%             plot(hEnergyVsFreq(1,cPos),energyData.freqVals,squeeze(energyData.data(1,cPos,:)),'color', attOutColors(cPos,:));
-%             plot(hEnergyVsFreq(1,cPos),energyData.freqVals,squeeze(energyData.data(2,cPos,:)),'color', attInColors(cPos,:));
-            figure(1)
-%             
-            %%%%%%%%%%%%%%%%%%%%%% DEnergyVsFreq %%%%%%%%%%%%%%%%%%%%%%%%%%
-            hold(hDEnergyVsFreq(1,cPos-5),'on');
-            %plot(hDEnergyVsFreq(1,cPos),energyData.freqVals,zeros(1,length(energyData.freqVals)),'color',[0.8 0.8 0.8]);
-            plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(mean(dEnergyVsFrequency(:,1,cPos,:),1)),'color', attOutColors(cPos,:),'LineWidth',2);
-            plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(mean(dEnergyVsFrequency(:,2,cPos,:),1)),'color', attInColors(cPos,:),'LineWidth',2);
-            plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(mean(dEnergyVsFrequencyBL(:,1,cPos,:),1)),'color', [0.8 0.8 0.8]);
-            plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(mean(dEnergyVsFrequencyBL(:,2,cPos,:),1)),'color', [0.4 0.4 0.4]);
+            hold(hEnergyVsFreq(1,cPos-5),'on');
+            plot(hEnergyVsFreq(1,cPos-5),energyDataBL.freqVals,squeeze(energyDataBL.data(1,cPos,:)),'color', [0.8 0.8 0.8]);
+            plot(hEnergyVsFreq(1,cPos-5),energyDataBL.freqVals,squeeze(energyDataBL.data(2,cPos,:)),'color', [0.8 0.8 0.8]);
+            
+            plot(hEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(energyData.data(1,cPos,:)),'color', attOutColors(cPos,:),'LineWidth',2);
+            plot(hEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(energyData.data(2,cPos,:)),'color', attInColors(cPos,:),'LineWidth',2);
             
             if cPos==6
                xlabel(hDEnergyVsFreq(1,cPos-5),'Frequency(Hz)');
@@ -92,8 +95,6 @@ timeRangeForSTComputation = [0.2 0.4];
 %             else   
 %                set(hDEnergyVsFreq(1,cPos-5),'YTickLabel',[],'fontSize',labelSize);
             end
-            
-            
             
             displayMeanBarPlot(hBarPlot(1,1),meanE{1});
             displayMeanBarPlot(hBarPlot(1,2),meanE{2});
@@ -110,15 +111,36 @@ timeRangeForSTComputation = [0.2 0.4];
                 ylabel(hBarPlot(1,cPos-5),'log(Power)');
             end
             
-            figure(1)
+            figure(FigIndex+1) 
+            %%%%%%%%%%%%%%%%%%%%%% DEnergyVsFreq %%%%%%%%%%%%%%%%%%%%%%%%%%
+            hold(hDEnergyVsFreq(1,cPos-5),'on');
+            %plot(hDEnergyVsFreq(1,cPos),energyData.freqVals,zeros(1,length(energyData.freqVals)),'color',[0.8 0.8 0.8]);
+            plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(mean(dEnergyVsFrequency(:,1,cPos,:),1)),'color', attOutColors(cPos,:),'LineWidth',2);
+            plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(mean(dEnergyVsFrequency(:,2,cPos,:),1)),'color', attInColors(cPos,:),'LineWidth',2);
+            plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(mean(dEnergyVsFrequencyBL(:,1,cPos,:),1)),'color', [0.8 0.8 0.8]);
+            plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(mean(dEnergyVsFrequencyBL(:,2,cPos,:),1)),'color', [0.4 0.4 0.4]);
+            
+            if cPos==6
+               xlabel(hDEnergyVsFreq(1,cPos-5),'Frequency(Hz)');
+               ylabel(hDEnergyVsFreq(1,cPos-5),'log(Power)');
+%             else   
+%                set(hDEnergyVsFreq(1,cPos-5),'YTickLabel',[],'fontSize',labelSize);
             end
             
+            displayMeanDifferenceBarPlot(hDiffBarPlot(1,1),meanE{1});
+            displayMeanDifferenceBarPlot(hDiffBarPlot(1,2),meanE{2});
+            displayMeanDifferenceBarPlot(hDiffBarPlot(1,3),peakGamma);
             
             
-%             yticklabels(hBarPlot(1,3),{ '0', '20', '40','60'});
-            
+            end
 end
-end
+            
+            
+            
+    
+end            
+
+
 
 function [energyData,energyDataBL] = getEnergyDataMT(monkeyName,expDates,protocolNames,folderSourceString,gridType,electrodeList,dayList,timeRangeForSTComputation,timeRangeForBLComputation,freqRanges)
 
@@ -312,7 +334,7 @@ end
 function displayMeanBarPlot(hPlot,meanData)
 
 numContrasts=8;
-contrastIndices = 0:numContrasts-1;
+% contrastIndices = 0:numContrasts-1;
 
 meanDataOut = squeeze(meanData(:,1,:));
 meanDataIn  = squeeze(meanData(:,2,:));
@@ -368,6 +390,95 @@ for j = 1:nbars
     errorbar(hPlot,x, AttInOutBar(:,j), semAttInOut(:,j), 'k', 'linestyle', 'none');
 end
 
+if numDays>1
+    for i=6:numContrasts
+        [~,p] = ttest2(meanData(:,1,i),meanData(:,2,i));
+        if p<0.05/numContrasts
+%             pColor = 'r';
+        elseif p<0.05
+%             pColor = 'g';
+        else
+%             pColor = 'w';
+        end
+    end
+end
+% for i=6:numContrasts
+%     bar(hPlot,mOut(i),semOut(i),'color',attOutColors(i,:),
+%     
+% end
+
+end
+function displayMeanDifferenceBarPlot(hPlot,meanData)
+
+numContrasts=8;
+% contrastIndices = 0:numContrasts-1;
+
+meanDataOut = squeeze(meanData(:,1,:));
+meanDataIn  = squeeze(meanData(:,2,:));
+meanDiffOutvsIn = meanDataIn - meanDataOut;
+
+% Plot raw Data
+numDays = size(meanData,1);
+
+if numDays>1
+    mOutvsIn = squeeze(mean(meanDiffOutvsIn,1)); semOutvsIn = squeeze(std(meanDiffOutvsIn,0,1))/sqrt(numDays);
+
+else
+    mOutvsIn = meanDiffOutvsIn; semOutvsIn = zeros(1,numContrasts);
+end
+
+hold(hPlot,'on');
+i = 6;
+DiffAttInOutBar = [mOutvsIn(i) ; mOutvsIn(i+1) ; mOutvsIn(i+2)];
+DiffsemAttInOut = [semOutvsIn(i) ; semOutvsIn(i+1) ; semOutvsIn(i+2)];
+bar(hPlot,DiffAttInOutBar)
+
+% Properties of the bar graph as required
+% ax.YGrid = 'on';
+% ax.GridLineStyle = '-';
+xticks(hPlot,[1 2 3]);
+
+% Naming each of the bar groups
+xticklabels(hPlot,{ '25%', '50%', '100%'});
+
+% X and Y labels
+% xlabel (hPlot,('Contrast'));
+% ylabel (hPlot,('log(Power)'));
+
+% % Creating a legend and placing it outside the bar plot
+% lg = legend('Attend-Out','Attend-In','AutoUpdate','off');
+% lg.Location = 'BestOutside';
+% lg.Orientation = 'Horizontal';
+
+hold on;
+
+% Finding the number of groups and the number of bars in each group
+ngroups = size(DiffAttInOutBar, 1);
+nbars = size(DiffAttInOutBar, 2);
+
+% Calculating the width for each bar group
+groupwidth = min(0.8, nbars/(nbars + 1.5));
+
+% Set the position of each error bar in the centre of the main bar
+% Based on barweb.m by Bolu Ajiboye from MATLAB File Exchange
+for j = 1:nbars
+    % Calculate center of each bar
+    x = (1:ngroups) - groupwidth/2 + (2*j-1) * groupwidth / (2*nbars);
+    errorbar(hPlot,x, DiffAttInOutBar(:,j), DiffsemAttInOut(:,j), 'k', 'linestyle', 'none');
+end
+
+if numDays>1
+    for i=6:numContrasts-1
+        [~,p] = ttest2(meanDiffOutvsIn(:,i),meanDiffOutvsIn(:,i+1));
+        if p<0.05/numContrasts
+%             pColor = 'r';
+        elseif p<0.05
+%             pColor = 'g';
+        else
+%             pColor = 'w';
+        end
+    end
+end
 % for i=6:numContrasts
 %     bar(hPlot,mOut(i),semOut(i),'color',attOutColors(i,:),
 %     
