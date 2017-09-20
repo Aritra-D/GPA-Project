@@ -4,7 +4,7 @@ function Fig1Induced(combineUniqueElectrodeData,getSpikeElectrodesFlag,unitID,sp
 
 
 if ~exist('combineUniqueElectrodeData','var'); combineUniqueElectrodeData=1;     end
-if ~exist('getSpikeElectrodesFlag','var');     getSpikeElectrodesFlag=0;         end  % Set to 1 if you want to analyze spike electrodes
+if ~exist('getSpikeElectrodesFlag','var');     getSpikeElectrodesFlag=1;         end  % Set to 1 if you want to analyze spike electrodes
 if ~exist('unitID','var');                     unitID=1;                         end  % 0 - unsorted hash. 1 - sorted Spikes
 if ~exist('spikeCutoff','var');                spikeCutoff=25;                   end
 if ~exist('snrCutoff','var');                  snrCutoff=2;                      end
@@ -40,6 +40,8 @@ if strcmpi(monkeyName, 'abu')
     figure(FigIndex+1)
     hDEnergyVsFreq      = getPlotHandles(1,3,[0.15 0.8 0.7 0.18],0.03,0.01);
     hDiffBarPlot        = getPlotHandles(1,3,[0.15 0.55 0.7 0.18],0.03,0.01);
+    figure(FigIndex+2)  
+    hPooledBarPlot      = getPlotHandles(1,3,[0.15 0.8 0.7 0.18],0.03,0.01);
 
 elseif strcmpi(monkeyName, 'rafiki')
     figure(FigIndex)
@@ -48,6 +50,8 @@ elseif strcmpi(monkeyName, 'rafiki')
     figure(FigIndex+1)
     hDEnergyVsFreq      = getPlotHandles(1,3,[0.15 0.30 0.7 0.18],0.03,0.01);
     hDiffBarPlot        = getPlotHandles(1,3,[0.15 0.05 0.7 0.18],0.03,0.01);
+    figure(FigIndex+2)  
+    hPooledBarPlot      = getPlotHandles(1,3,[0.15 0.55 0.7 0.18],0.03,0.01);
 end
 
 % LFP Power is always computed for this period. ERP and Firing Rates are
@@ -76,19 +80,33 @@ timeRangeForSTComputation = [0.2 0.4];
             energyData = combineEnergyData(energyDataTMP);
             energyDataBL = combineEnergyData(energyDataBLTMP);
             
+            % Peak and Max Gamma
+            [peakGamma,maxGamma] = getPeakFrequency(dEnergyVsFrequency,energyData.freqVals);
+            
             %%%%%%%%%%%%%%%%%%%%%%%%%%%% Plot Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%
             for cPos=6:8
-            
+            clear FreqValGammaPos
             figure(FigIndex)
             
+              GammaPos{1} = [35 40 45];  GammaPos{2} = [40 45 50]; GammaPos{3} = [50 55 60]; AlphaPos = [10 15];
+            for i = 1:length(GammaPos{1})
+            FreqValGammaPos(i) = find(GammaPos{cPos-5}(i)== energyData.freqVals);
+            
+            end
+            for i = 1:length(AlphaPos)
+                FreqValAlphaPos(i) = find(AlphaPos(i)== energyData.freqVals);
+            end
+            PSDPower = squeeze(energyData.data(2,cPos,:));
             %%%%%%%%%%%%%%%%%%%%%%% EnergyVsFreq %%%%%%%%%%%%%%%%%%%%%%%%%%
             hold(hEnergyVsFreq(1,cPos-5),'on');
             plot(hEnergyVsFreq(1,cPos-5),energyDataBL.freqVals,squeeze(energyDataBL.data(1,cPos,:)),'color', [0.8 0.8 0.8]);
             plot(hEnergyVsFreq(1,cPos-5),energyDataBL.freqVals,squeeze(energyDataBL.data(2,cPos,:)),'color', [0.8 0.8 0.8]);
             
+            
             plot(hEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(energyData.data(1,cPos,:)),'color', attOutColors(cPos,:),'LineWidth',2);
             plot(hEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(energyData.data(2,cPos,:)),'color', attInColors(cPos,:),'LineWidth',2);
-            
+            plot(hEnergyVsFreq(1,cPos-5),energyData.freqVals(FreqValGammaPos),PSDPower(FreqValGammaPos),'o','color', attInColors(cPos,:),'LineWidth',1.5);
+            plot(hEnergyVsFreq(1,cPos-5),energyData.freqVals(FreqValAlphaPos),PSDPower(FreqValAlphaPos),'o','color', attInColors(cPos,:),'LineWidth',1.5);
             if cPos==6
                xlabel(hDEnergyVsFreq(1,cPos-5),'Frequency(Hz)');
                ylabel(hDEnergyVsFreq(1,cPos-5),'log(Power)');
@@ -99,8 +117,7 @@ timeRangeForSTComputation = [0.2 0.4];
             displayMeanBarPlot(hBarPlot(1,1),meanE{1});
             displayMeanBarPlot(hBarPlot(1,2),meanE{2});
             
-            % Peak and Max Gamma
-            [peakGamma,maxGamma] = getPeakFrequency(dEnergyVsFrequency,energyData.freqVals);
+  
             displayMeanBarPlot(hBarPlot(1,3),peakGamma);
             
             if cPos==8
@@ -113,10 +130,14 @@ timeRangeForSTComputation = [0.2 0.4];
             
             figure(FigIndex+1) 
             %%%%%%%%%%%%%%%%%%%%%% DEnergyVsFreq %%%%%%%%%%%%%%%%%%%%%%%%%%
+          
+            ChangeinPower = squeeze(mean(dEnergyVsFrequency(:,2,cPos,:),1));
             hold(hDEnergyVsFreq(1,cPos-5),'on');
             %plot(hDEnergyVsFreq(1,cPos),energyData.freqVals,zeros(1,length(energyData.freqVals)),'color',[0.8 0.8 0.8]);
             plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(mean(dEnergyVsFrequency(:,1,cPos,:),1)),'color', attOutColors(cPos,:),'LineWidth',2);
             plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(mean(dEnergyVsFrequency(:,2,cPos,:),1)),'color', attInColors(cPos,:),'LineWidth',2);
+            plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals(FreqValGammaPos),ChangeinPower(FreqValGammaPos),'o','color', attInColors(cPos,:),'LineWidth',1.5);
+            plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals(FreqValAlphaPos),ChangeinPower(FreqValAlphaPos),'o','color', attInColors(cPos,:),'LineWidth',1.5);
             plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(mean(dEnergyVsFrequencyBL(:,1,cPos,:),1)),'color', [0.8 0.8 0.8]);
             plot(hDEnergyVsFreq(1,cPos-5),energyData.freqVals,squeeze(mean(dEnergyVsFrequencyBL(:,2,cPos,:),1)),'color', [0.4 0.4 0.4]);
             
@@ -131,7 +152,11 @@ timeRangeForSTComputation = [0.2 0.4];
             displayMeanDifferenceBarPlot(hDiffBarPlot(1,2),meanE{2});
             displayMeanDifferenceBarPlot(hDiffBarPlot(1,3),peakGamma);
             
+            figure(FigIndex+2)
+            displayPooledMeanBarPlotAcrossContrasts(hPooledBarPlot(1,1),meanE{1});
             
+            displayPooledMeanBarPlotAcrossContrasts(hPooledBarPlot(1,2),meanE{2});
+%             displayPooledMeanBarPlotAcrossContrasts(hPooledBarPlot(1,3),peakGamma);
             end
 end
             
@@ -193,7 +218,7 @@ numFreqs = length(freqRanges);
 
 for aPos=1:2 % 1-out, 2-in
     for cPos=6:numContrasts
-        clear goodPos
+        clear goodPos 
         goodPos = setdiff(parameterCombinations{cPos,1,1,aPos,1},badTrials);
         N(aPos,cPos) = length(goodPos);
             
@@ -217,8 +242,27 @@ for aPos=1:2 % 1-out, 2-in
                 %mEnergyVsFreqBL(aPos,cPos,:) = conv2Log(removeNoiseAndSmooth(tmpEBL(:),ys,frequenciesToRemove));
                 
                 for i=1:numFreqs
-                    energyVals{i}(aPos,cPos) = conv2Log(getMeanEnergyForAnalysis(tmpEST(:),ys,freqRanges{i},freqPosToRemove)); %
-                    energyValsBL{i}(aPos,cPos) = conv2Log(getMeanEnergyForAnalysis(tmpEBL(:),ys,freqRanges{i},freqPosToRemove)); %,
+                    if i == 2
+                        freqRangesGamma{1} = [35 50];  freqRangesGamma{2} = [40 55]; freqRangesGamma{3} = [50 65];
+                        [posAverage,eValue] = getMeanEnergyForAnalysis(tmpEST(:),ys,freqRangesGamma{cPos-5},freqPosToRemove);
+                        energyVals{i}(aPos,cPos) = conv2Log(eValue); %
+                        PosToAverage{i}{aPos,cPos} = posAverage;
+                        
+                        [posAverage,eValue] = getMeanEnergyForAnalysis(tmpEBL(:),ys,freqRangesGamma{cPos-5},freqPosToRemove);
+                        energyValsBL{i}(aPos,cPos) = conv2Log(eValue); %
+                        PosToAverageBL{i}{aPos,cPos} = posAverage;
+                            
+                     
+                    else
+                        clear posAverage eValue
+                        [posAverage,eValue] =  getMeanEnergyForAnalysis(tmpEST(:),ys,freqRanges{i},freqPosToRemove);
+                        energyVals{i}(aPos,cPos) = conv2Log(eValue); %
+                        PosToAverage{i}{aPos,cPos} = posAverage;
+                        
+                        [posAverage,eValue] = getMeanEnergyForAnalysis(tmpEBL(:),ys,freqRanges{i},freqPosToRemove);
+                        energyValsBL{i}(aPos,cPos) = conv2Log(eValue); %,
+                        PosToAverageBL{i}{aPos,cPos} = posAverage;
+                    end
                 end
     end
 end
@@ -232,6 +276,7 @@ end
     energyData.analysisData = energyVals;
     energyData.freqVals = ys;
     energyData.N = N;
+    energyData.PosToAvg = PosToAverage;
     
     energyDataBL.data = mEnergyVsFreqBL;
     energyDataBL.analysisData = energyValsBL;
@@ -333,11 +378,13 @@ function [parameterCombinations,cValsUnique,tValsUnique,eValsUnique,aValsUnique,
 load([folderSourceString 'data\' monkeyName '\' gridType '\' expDate '\' protocolName '\extractedData\parameterCombinations.mat']);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function eValue = getMeanEnergyForAnalysis(mEnergy,freq,freqRange,freqPosToRemove)
+function [posToAverage,eValue] = getMeanEnergyForAnalysis(mEnergy,freq,freqRange,freqPosToRemove)
 
 posToAverage = setdiff(intersect(find(freq>=freqRange(1)),find(freq<freqRange(2))),freqPosToRemove);
 eValue   = mean(mEnergy(posToAverage));
 end
+
+
 function displayMeanBarPlot(hPlot,meanData)
 
 numContrasts=8;
@@ -490,5 +537,63 @@ end
 %     bar(hPlot,mOut(i),semOut(i),'color',attOutColors(i,:),
 %     
 % end
+
+end
+function displayPooledMeanBarPlotAcrossContrasts(hPlot,meanData)
+numContrasts=8;
+
+meanDataOut = squeeze(meanData(:,1,:));
+meanDataIn  = squeeze(meanData(:,2,:));
+
+MeanDataOutextractedCons = meanDataOut(:,6:8);
+MeanDataInextractedCons = meanDataIn(:,6:8);
+
+AttendedOutPooled = [MeanDataOutextractedCons(:,1);MeanDataOutextractedCons(:,2);MeanDataOutextractedCons(:,3)];
+AttendedInPooled =  [MeanDataInextractedCons(:,1);MeanDataInextractedCons(:,2);MeanDataInextractedCons(:,3)];
+
+MeanAttendedOutPooledAcrossElec = mean(AttendedOutPooled,1); SEMAttendedOutPooledAcrossElec = std(AttendedOutPooled,[],1)./sqrt(size(AttendedOutPooled,1));
+MeanAttendedInPooledAcrossElec = mean(AttendedInPooled,1); SEMAttendedInPooledAcrossElec = std(AttendedInPooled,[],1)./sqrt(size(AttendedInPooled,1));
+
+hold(hPlot,'on');
+BarAttendInOut = [MeanAttendedOutPooledAcrossElec,MeanAttendedInPooledAcrossElec];
+semAttendInOut = [SEMAttendedOutPooledAcrossElec,SEMAttendedInPooledAcrossElec];
+bar(hPlot,BarAttendInOut);
+errorbar(hPlot,BarAttendInOut,semAttendInOut, 'k', 'linestyle', 'none');
+
+% Properties of the bar graph as required
+% ax.YGrid = 'on';
+% ax.GridLineStyle = '-';
+xticks(hPlot,[1 2]);
+
+% Naming each of the bar groups
+xticklabels(hPlot,{ 'Attend-Out','Attend-In'});
+
+% X and Y labels
+% xlabel (hPlot,('Contrast'));
+% ylabel (hPlot,('log(Power)'));
+
+% % Creating a legend and placing it outside the bar plot
+% lg = legend('Attend-Out','Attend-In','AutoUpdate','off');
+% lg.Location = 'BestOutside';
+% lg.Orientation = 'Horizontal';
+
+% hold on;
+% 
+% % Finding the number of groups and the number of bars in each group
+% ngroups = size(BarAttendInOut, 1);
+% nbars = size(BarAttendInOut, 2);
+% 
+% % Calculating the width for each bar group
+% groupwidth = min(0.8, nbars/(nbars + 1.5));
+% 
+% % Set the position of each error bar in the centre of the main bar
+% % Based on barweb.m by Bolu Ajiboye from MATLAB File Exchange
+% for j = 1:nbars
+%     % Calculate center of each bar
+%     x = (1:ngroups) - groupwidth/2 + (2*j-1) * groupwidth / (2*nbars);
+%     errorbar(hPlot,x, BarAttendInOut(:,j), semAttendInOut(:,j), 'k', 'linestyle', 'none');
+% end
+
+
 
 end
